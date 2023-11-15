@@ -33,6 +33,19 @@ const data = computed(() => {
 });
 
 const exportData = () => {
+  const jsonString = JSON.stringify(props.nodeInfo);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute(
+    "download",
+    props.nodeInfo["空间飞行器目录名称"] || "节点数据"
+  );
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link); //下载完成移除元素
+  window.URL.revokeObjectURL(url);
   message.success("导出成功");
 };
 </script>
