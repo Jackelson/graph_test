@@ -1,15 +1,11 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://localhost",
+  baseURL: "",
 });
 
 instance.interceptors.request.use(
   (config) => {
-    if (store.getters.token || storage.getItem("token")) {
-      // 设置token请求头
-      config.headers["token"] = getToken() || storage.getItem("token");
-    }
     return config;
   },
   (error) => {
@@ -18,11 +14,7 @@ instance.interceptors.request.use(
 );
 instance.interceptors.response.use(
   (config) => {
-    if (store.getters.token || storage.getItem("token")) {
-      // 设置token请求头
-      config.headers["token"] = getToken() || storage.getItem("token");
-    }
-    return config;
+    return Promise.resolve(config.data);
   },
   (error) => {
     return Promise.reject(error);

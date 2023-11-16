@@ -30,10 +30,9 @@ const props = defineProps({
 const open = ref(false);
 const emit = defineEmits(["nextNode"]);
 // 获取下一个节点
-const getNext = () => {
-  // async
-  // const res = await getNextNode(props.id);
-  emit("nextNode", { id: "12312" });
+const getNext = async () => {
+  const res = await getNextNode(props.id);
+  emit("nextNode", res.data);
 };
 // 导入数据
 const importData = () => {

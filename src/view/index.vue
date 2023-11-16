@@ -39,27 +39,62 @@ const size = ref(0);
 const totalPage = ref(0);
 // 获取数据
 const getData = async () => {
-  let res = null;
-  await getGraphData({ size }).catch(() => {
-    res = resData;
+  const res = await getGraphData({ size: size.value }).catch((err) => {
+    console.log(err);
   });
-  console.log(res);
   if (res.recode == 200) {
-    data.value.nodes = res.data.nodes.map((item) => {
-      return JSON.parse(item);
+    data.value.nodes = res.data.nodes.map((node) => {
+      const parseNode = JSON.parse(node);
+      return {
+        color: judgeLabel(parseNode.label),
+        ...parseNode,
+      };
     });
     totalPage.value = Number(res.data.total) / 100;
   }
 };
-getData();
+
+const judgeLabel = (labels = []) => {
+  console.log(labels);
+  const label = labels[0];
+  switch (label) {
+    case "TEST":
+      return "green";
+    case "卫星":
+      return "red";
+    case "轨道":
+      return "blue";
+    case "近接事件":
+      return "yellow";
+    default:
+      return "#fff";
+      break;
+  }
+};
 
 // 获取下一节点
-const nextNode = (e) => {
+const nextNode = (nextData) => {
   showMenu.value = false;
-  console.log(e);
+  data.value.nodes = [
+    ...data.value.nodes,
+    ...nextData.nodes.map((node) => {
+      const parseNode = JSON.parse(node);
+      return {
+        color: judgeLabel(parseNode.label),
+        ...parseNode,
+      };
+    }),
+  ];
+  data.value.links = [
+    ...data.value.links,
+    ...nextData.relation.map((link) => JSON.parse(link)),
+  ];
+  console.log(data.value);
+  myGraph.graphData(data.value);
 };
-onMounted(() => {
-  let myGraph = ForceGraph3D();
+let myGraph = ForceGraph3D();
+onMounted(async () => {
+  await getData();
   const graphElement = document.getElementById("graph");
   myGraph(graphElement)
     .graphData(data.value)
