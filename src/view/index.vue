@@ -8,10 +8,22 @@
       :style="menuPosition"
       @nextNode="nextNode"
     ></Menu>
+    <div class="page">
+      <a-config-provider :locale="zhCN">
+        <a-pagination
+          v-model:current="size"
+          :total="totalPage"
+          :showSizeChanger="false"
+          :showQuickJumper="true"
+          @change="changePage"
+        />
+      </a-config-provider>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import zhCN from "ant-design-vue/es/locale/zh_CN";
 import ForceGraph3D from "3d-force-graph";
 import resData from "../data/res.json";
 import { onMounted, ref, reactive } from "vue";
@@ -25,7 +37,15 @@ let menuPosition = reactive({
   left: 0,
   top: 0,
 });
+// 翻页
 
+const size = ref(0); // 当前页
+const totalPage = ref(0); // 总页数
+const changePage = (page) => {
+  // 改变分页
+  size.value = page;
+  getData();
+};
 // 卫星数据
 const data = ref({
   nodes: [],
@@ -33,10 +53,7 @@ const data = ref({
 });
 // 当前点击节点的信息
 const currentNode = ref({});
-// 当前页
-const size = ref(0);
-// 总页数
-const totalPage = ref(0);
+
 // 获取数据
 const getData = async () => {
   const res = await getGraphData({ size: size.value }).catch((err) => {
@@ -50,7 +67,13 @@ const getData = async () => {
         ...parseNode,
       };
     });
+    data.value.links = [];
     totalPage.value = Number(res.data.total) / 100;
+    if (size.value == 0) {
+      size.value = 1;
+      return;
+    }
+    myGraph.graphData(data.value);
   }
 };
 
@@ -119,4 +142,13 @@ onMounted(async () => {
 });
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.page {
+  padding: 5px 0;
+  left: 50%;
+  transform: translate(-50%);
+  background: #ccc;
+  position: absolute;
+  bottom: 20px;
+}
+</style>
