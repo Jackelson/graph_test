@@ -13,7 +13,8 @@
 <script setup lang="ts">
 import { ref, defineProps, computed } from "vue";
 import { message } from "ant-design-vue";
-const props = defineProps(["nodeInfo"]);
+import { exportGraph } from "../api/graph.js";
+const props = defineProps(["nodeInfo", "data"]);
 const data = computed(() => {
   let newArray = [];
   const keys = Object.keys(props.nodeInfo);
@@ -32,16 +33,33 @@ const data = computed(() => {
   return newArray;
 });
 
-const exportData = () => {
-  const jsonString = JSON.stringify(props.nodeInfo);
+const handelData: Object = (id: String) => {
+  console.log(id);
+  let nodes: Array = <String>[];
+  let relation: Array = <String>[];
+  props.data.links.forEach((link) => {
+    nodes.push(link.source.id);
+    if (!nodes.includes(link.target)) {
+      nodes.push(link.target.id);
+    }
+    relation.push(link.id);
+  });
+  return {
+    nodes: nodes.join(","),
+    realations: relation.join(","),
+  };
+};
+
+const exportData = async () => {
+  const data: Object = handelData(props.nodeInfo.id);
+  const res = await exportGraph(data);
+  console.log(res);
+  const jsonString = JSON.stringify(res);
   const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.setAttribute(
-    "download",
-    props.nodeInfo["空间飞行器目录名称"] || "节点数据"
-  );
+  link.setAttribute("download", "节点数据");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link); //下载完成移除元素
