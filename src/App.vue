@@ -3,10 +3,22 @@ import index from "./view/index.vue";
 </script>
 
 <template>
-  <index />
+  <div>
+    <h2 class="title">航天器威胁感知领域知识图谱</h2>
+    <index />
+  </div>
 </template>
 
 <style lang="scss">
+.title {
+  text-align: center;
+  color: white;
+  position: absolute;
+  top: 0;
+  z-index: 998;
+  left: 50%;
+  transform: translate(-50%);
+}
 :where(.css-dev-only-do-not-override-1qb1s0s).ant-modal .ant-modal-content {
   border: 1px solid #fff;
   background: rgba($color: #fff, $alpha: 0.6) !important;
