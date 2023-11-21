@@ -20,7 +20,7 @@ const data = computed(() => {
   const keys = Object.keys(props.nodeInfo);
   if (keys.length > 0) {
     keys.forEach((key, index) => {
-      if (index > 10 || key == "id") {
+      if (index > 10 || key == "id" || key == "color") {
         return;
       }
       newArray.push({
