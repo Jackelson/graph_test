@@ -15,3 +15,22 @@ export function getNextNode(id) {
     type: "get",
   });
 }
+// 导出
+export function exportGraph(params) {
+  return request({
+    url: "/graph/export",
+    method: "post",
+    params,
+  });
+}
+// 导入
+export function importGraph(data) {
+  return request({
+    url: "/graph/import",
+    method: "post",
+    headers: {
+      "Content-Type": "application/form-data",
+    },
+    data,
+  });
+}
