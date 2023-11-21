@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, defineProps, computed } from "vue";
 import { message } from "ant-design-vue";
 import { exportGraph } from "../api/graph.js";
@@ -33,10 +33,9 @@ const data = computed(() => {
   return newArray;
 });
 
-const handelData: Object = (id: String) => {
-  console.log(id);
-  let nodes: Array = <String>[];
-  let relation: Array = <String>[];
+const handelData = (id) => {
+  let nodes = [];
+  let relation = [];
   props.data.links.forEach((link) => {
     nodes.push(link.source.id);
     if (!nodes.includes(link.target)) {
@@ -51,9 +50,8 @@ const handelData: Object = (id: String) => {
 };
 
 const exportData = async () => {
-  const data: Object = handelData(props.nodeInfo.id);
+  const data = handelData(props.nodeInfo.id);
   const res = await exportGraph(data);
-  console.log(res);
   const jsonString = JSON.stringify(res);
   const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);

@@ -1,0 +1,9 @@
+import { createApp } from "/node_modules/.vite/deps/vue.js?v=7a7d5247";
+import "/src/style.css";
+import "/src/assets/global.scss";
+import App from "/src/App.vue";
+import { Upload, Modal, Button, Pagination, ConfigProvider } from "/node_modules/.vite/deps/ant-design-vue.js?v=7a7d5247";
+const app = createApp(App);
+app.use(Upload).use(Modal).use(Button).use(Pagination).use(ConfigProvider).mount("#app");
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1haW4udHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgY3JlYXRlQXBwIH0gZnJvbSAndnVlJ1xuaW1wb3J0ICcuL3N0eWxlLmNzcydcbmltcG9ydCAnLi9hc3NldHMvZ2xvYmFsLnNjc3MnXG5pbXBvcnQgQXBwIGZyb20gJy4vQXBwLnZ1ZSdcblxuaW1wb3J0IHsgVXBsb2FkLCBNb2RhbCwgQnV0dG9uLCBQYWdpbmF0aW9uLENvbmZpZ1Byb3ZpZGVyfSBmcm9tICdhbnQtZGVzaWduLXZ1ZSc7XG5jb25zdCBhcHAgPSBjcmVhdGVBcHAoQXBwKVxuYXBwLnVzZShVcGxvYWQpLnVzZShNb2RhbCkudXNlKEJ1dHRvbikudXNlKFBhZ2luYXRpb24pLnVzZShDb25maWdQcm92aWRlcikubW91bnQoJyNhcHAnKVxuXG4iXSwibWFwcGluZ3MiOiJBQUFBLFNBQVMsaUJBQWlCO0FBQzFCLE9BQU87QUFDUCxPQUFPO0FBQ1AsT0FBTyxTQUFTO0FBRWhCLFNBQVMsUUFBUSxPQUFPLFFBQVEsWUFBVyxzQkFBcUI7QUFDaEUsTUFBTSxNQUFNLFVBQVUsR0FBRztBQUN6QixJQUFJLElBQUksTUFBTSxFQUFFLElBQUksS0FBSyxFQUFFLElBQUksTUFBTSxFQUFFLElBQUksVUFBVSxFQUFFLElBQUksY0FBYyxFQUFFLE1BQU0sTUFBTTsiLCJuYW1lcyI6W119
