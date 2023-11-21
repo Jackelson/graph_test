@@ -3,49 +3,47 @@
     <div class="button" @click="getNext">下一级节点</div>
     <div class="solid"></div>
     <div class="button" @click="importData">导入数据</div>
-    <a-modal
-      wrapClassName="ssss"
-      v-model:open="open"
-      title="数据导入"
-      okText="保存"
-      cancelText="取消"
-      @ok="handleOk"
-    >
-      <upload></upload>
-    </a-modal>
+    <div class="solid"></div>
+    <div class="button" @click="getNodeDetail">节点详情</div>
+    <upload ref="uploadRef" @uploadFile="uploadFile"></upload>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { getNextNode } from "../api/graph.js";
 import { defineProps, defineEmits, ref } from "vue";
 import upload from "./upload.vue";
+
 const props = defineProps({
-  id: {
-    type: String,
+  node: {
+    type: Object,
     required: true,
   },
 });
-
-const open = ref(false);
-const emit = defineEmits(["nextNode"]);
+const uploadRef = ref(null);
+const emit = defineEmits(["nextNode", "getNodeDetail"]);
 // 获取下一个节点
 const getNext = async () => {
-  const res = await getNextNode(props.id);
+  const res = await getNextNode(props.node.id);
   emit("nextNode", res.data);
 };
 // 导入数据
 const importData = () => {
-  open.value = true;
+  uploadRef.value.open = true;
 };
-const handleOk = () => {
-  open.value = false;
+const uploadFile = (data) => {
+  emit("resetData", data);
+  uploadRef.value.open = false;
+};
+// 获取节点详情
+const getNodeDetail = () => {
+  emit("getNodeDetail");
 };
 </script>
 
 <style lang="scss" scoped>
 .menu-wrap {
-  height: 100px;
+  height: 150px;
   width: 80px;
   border: 1px solid #fff;
   position: absolute;
