@@ -1,10 +1,11 @@
 <template>
-  <div class="menu-wrap">
-    <div class="button" @click="getNext">下一级节点</div>
-    <div class="solid"></div>
-    <div class="button" @click="importData">导入数据</div>
-    <div class="solid"></div>
-    <div class="button" @click="getNodeDetail">节点详情</div>
+  <div class="menu-wrap" :style="{ height: props.node?.id ? '100px' : '50px' }">
+    <template v-if="props.node?.id">
+      <div class="button" @click="getNext">下一级节点</div>
+      <div class="solid"></div>
+      <div class="button" @click="getNodeDetail">节点详情</div>
+    </template>
+    <div class="button" v-else @click="importData">导入数据</div>
     <upload ref="uploadRef" @uploadFile="uploadFile"></upload>
   </div>
 </template>
@@ -20,6 +21,7 @@ const props = defineProps({
     required: true,
   },
 });
+
 const uploadRef = ref(null);
 const emit = defineEmits(["nextNode", "getNodeDetail", "resetData"]);
 // 获取下一个节点
@@ -42,7 +44,6 @@ const getNodeDetail = () => {
 
 <style lang="scss" scoped>
 .menu-wrap {
-  height: 150px;
   width: 80px;
   border: 1px solid #fff;
   position: absolute;
