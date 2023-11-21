@@ -216,7 +216,7 @@ onMounted(async () => {
     })
     .nodeThreeObjectExtend(true)
     .nodeThreeObject((node) => {
-      const sprite = new SpriteText(node["卫星名称"]);
+      let sprite = new SpriteText(node["卫星名称"] || node["事件编号"]);
       sprite.material.depthWrite = false; // make sprite background transparent
       sprite.textHeight = 5;
       sprite.color = "#ccc";
