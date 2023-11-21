@@ -1,12 +1,27 @@
 <template>
   <div>
     <div id="graph"></div>
-    <nodeInfo v-if="showToolTip" :nodeInfo="currentNode"></nodeInfo>
+    <div
+      class="export"
+      @click="exportData"
+      :style="{
+        top: selectedNode.length > 0 ? '70px' : '-50px',
+      }"
+    >
+      导出节点数据
+    </div>
+    <nodeInfo
+      v-if="showToolTip"
+      :data="data"
+      :nodeInfo="currentNode"
+    ></nodeInfo>
     <Menu
       v-show="showMenu"
-      :id="currentNode.id"
+      :node="currentNode"
       :style="menuPosition"
       @nextNode="nextNode"
+      @reasetData="resetData"
+      @getNodeDetail="getNodeDetail"
     ></Menu>
     <div class="page">
       <a-config-provider :locale="zhCN">
@@ -22,20 +37,28 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import zhCN from "ant-design-vue/es/locale/zh_CN";
 import ForceGraph3D from "3d-force-graph";
 import resData from "../data/res.json";
 import { onMounted, ref, reactive } from "vue";
 import Menu from "../components/menu.vue";
 import nodeInfo from "../components/nodeInfo.vue";
-import { getGraphData } from "../api/graph.js";
+import { getGraphData, exportGraph } from "../api/graph.js";
+import { message } from "ant-design-vue";
+import SpriteText from "three-spritetext";
 //弹框展示
 const showToolTip = ref(false);
 let showMenu = ref(false);
 let menuPosition = reactive({
   left: 0,
   top: 0,
+});
+
+let tipPosition = reactive({
+  left: 0,
+  top: 0,
+  text: "",
 });
 // 翻页
 
@@ -44,8 +67,11 @@ const totalPage = ref(0); // 总页数
 const changePage = (page) => {
   // 改变分页
   size.value = page;
+  selectedNode.value = [];
   getData();
 };
+
+let selectedNode = ref([]);
 // 卫星数据
 const data = ref({
   nodes: [],
@@ -53,18 +79,19 @@ const data = ref({
 });
 // 当前点击节点的信息
 const currentNode = ref({});
-
 // 获取数据
 const getData = async () => {
   const res = await getGraphData({ size: size.value }).catch((err) => {
     console.log(err);
   });
   if (res.recode == 200) {
-    data.value.nodes = res.data.nodes.map((node) => {
+    data.value.nodes = res.data.node.map((node) => {
       const parseNode = JSON.parse(node);
       return {
         color: judgeLabel(parseNode.label),
         ...parseNode,
+        collapsed: false,
+        nodeLabel: "2232323",
       };
     });
     data.value.links = [];
@@ -94,27 +121,64 @@ const judgeLabel = (labels = []) => {
       break;
   }
 };
-
+/**
+ * 节点选中逻辑，选中之后，判断该节点是否展开展开去查找边，
+ *
+ */
 // 获取下一节点
 const nextNode = (nextData) => {
+  // 判断当前选中的节点是否已经展开过
+  if (currentNode.value.collapsed) {
+    showMenu.value = false;
+    return;
+  }
+  // 把获取到数据进行处理
+  const links = nextData.relation.map((link) => JSON.parse(link));
+  const nextNodes = nextData.node.map((node) => {
+    const parseNode = JSON.parse(node);
+    return {
+      color: judgeLabel(parseNode.label),
+      ...parseNode,
+      collapsed: false,
+    };
+  });
+  // 拿到下一节点之后，将节点放在父节点上
+  data.value.nodes.forEach((node) => {
+    if (node.id == currentNode.value.id) {
+      node.collapsed = true;
+      currentNode.value.collapsed = true;
+      node.childLinks = links;
+      node.children = nextNodes;
+    }
+  });
+  // 关闭按钮
   showMenu.value = false;
+  // 将下一个节点的数据，放在总数据中渲染图
   data.value.nodes = [
-    ...data.value.nodes,
-    ...nextData.nodes.map((node) => {
-      const parseNode = JSON.parse(node);
-      return {
-        color: judgeLabel(parseNode.label),
-        ...parseNode,
-      };
+    ...data.value.nodes.map((n) => {
+      if (n.id === currentNode.id) {
+        n.collapsed = true;
+      }
+      return n;
     }),
+    ...nextNodes,
   ];
-  data.value.links = [
-    ...data.value.links,
-    ...nextData.relation.map((link) => JSON.parse(link)),
-  ];
-  console.log(data.value);
+  data.value.links = [...data.value.links, ...links];
   myGraph.graphData(data.value);
 };
+// 导入后重置
+const resetData = (d) => {
+  data.value.nodes = d.node.map((item) => {
+    return {
+      color: judgeLabel(parseNode.label),
+      ...JSON.parse(item),
+      collapsed: true,
+    };
+  });
+  data.value.links = d.relation.map((item) => JSON.parse(item));
+  myGraph.graphData(data.value);
+};
+// 图数据事件
 let myGraph = ForceGraph3D();
 onMounted(async () => {
   await getData();
@@ -130,25 +194,100 @@ onMounted(async () => {
     })
     // 左击节点事件
     .onNodeClick(function (node) {
-      currentNode.value = node;
-      showToolTip.value = true;
-      console.log(node, event);
+      //  左击鼠标
+      if (selectedNode.value.some((item) => item.id == node.id)) {
+        data.value.nodes.forEach((item) => {
+          if (item.id == node.id) {
+            item.color = "#fff";
+          }
+        });
+        selectedNode.value = selectedNode.value.filter(
+          (item) => item.id != node.id
+        );
+      } else {
+        data.value.nodes.forEach((item) => {
+          if (item.id == node.id) {
+            item.color = "red";
+          }
+        });
+        selectedNode.value.push(node);
+      }
+      myGraph.graphData(data.value);
+    })
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => {
+      const sprite = new SpriteText(node["卫星名称"]);
+      sprite.material.depthWrite = false; // make sprite background transparent
+      sprite.textHeight = 5;
+      sprite.color = "#ccc";
+      return sprite;
     })
     // 背景点击事件
     .onBackgroundClick(function () {
       showToolTip.value = false;
       showMenu.value = false;
     });
+  // .onBackgroundRightClick(function () {
+  //   showMenu.value = true;
+  // })
 });
+// 展示节点详情
+const getNodeDetail = () => {
+  showMenu.value = false;
+  showToolTip.value = true;
+};
+// 导出节点数据
+const exportData = async () => {
+  let links = [];
+  let nodes = [];
+  selectedNode.value.map((item) => {
+    if (item.collapsed) {
+      links = [...item.childLinks.map((l) => l.id), ...links];
+      nodes = [...item.children.map((n) => n.id), ...nodes];
+    }
+    nodes.push(item.id);
+  });
+  const res = await exportGraph({
+    nodes: nodes.join(","),
+    relations: links.join(","),
+  });
+  const jsonString = JSON.stringify(res);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "节点数据");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link); //下载完成移除元素
+  window.URL.revokeObjectURL(url);
+  message.success("导出成功");
+};
 </script>
 
 <style lang="scss" scoped>
 .page {
-  padding: 5px 0;
+  padding: 5px 10px;
+  padding-right: 25px;
   left: 50%;
   transform: translate(-50%);
   background: #ccc;
   position: absolute;
   bottom: 20px;
+}
+.export {
+  cursor: pointer;
+  width: 200px;
+  height: 50px;
+  color: #fff;
+  background: #ccc;
+  position: absolute;
+  z-index: 999;
+  font-size: 20px;
+  left: 50%;
+  transform: translate(-50%);
+  text-align: center;
+  line-height: 50px;
+  transition: all 0.5s linear;
 }
 </style>
