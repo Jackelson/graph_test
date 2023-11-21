@@ -20,7 +20,7 @@
       :node="currentNode"
       :style="menuPosition"
       @nextNode="nextNode"
-      @reasetData="resetData"
+      @resetData="resetData"
       @getNodeDetail="getNodeDetail"
     ></Menu>
     <div class="page">
@@ -85,7 +85,7 @@ const getData = async () => {
     console.log(err);
   });
   if (res.recode == 200) {
-    data.value.nodes = res.data.node.map((node) => {
+    data.nodes = res.data.node.map((node) => {
       const parseNode = JSON.parse(node);
       return {
         color: judgeLabel(parseNode.label),
@@ -94,18 +94,17 @@ const getData = async () => {
         nodeLabel: "2232323",
       };
     });
-    data.value.links = [];
+    data.links = [];
     totalPage.value = Number(res.data.total) / 100;
     if (size.value == 0) {
       size.value = 1;
       return;
     }
-    myGraph.graphData(data.value);
+    myGraph.graphData(data);
   }
 };
 
 const judgeLabel = (labels = []) => {
-  console.log(labels);
   const label = labels[0];
   switch (label) {
     case "TEST":
@@ -143,7 +142,7 @@ const nextNode = (nextData) => {
     };
   });
   // 拿到下一节点之后，将节点放在父节点上
-  data.value.nodes.forEach((node) => {
+  data.nodes.forEach((node) => {
     if (node.id == currentNode.value.id) {
       node.collapsed = true;
       currentNode.value.collapsed = true;
@@ -154,8 +153,8 @@ const nextNode = (nextData) => {
   // 关闭按钮
   showMenu.value = false;
   // 将下一个节点的数据，放在总数据中渲染图
-  data.value.nodes = [
-    ...data.value.nodes.map((n) => {
+  data.nodes = [
+    ...data.nodes.map((n) => {
       if (n.id === currentNode.id) {
         n.collapsed = true;
       }
@@ -163,20 +162,34 @@ const nextNode = (nextData) => {
     }),
     ...nextNodes,
   ];
-  data.value.links = [...data.value.links, ...links];
-  myGraph.graphData(data.value);
+  data.links = [...data.links, ...links];
+  myGraph.graphData(data);
 };
 // 导入后重置
 const resetData = (d) => {
-  data.value.nodes = d.node.map((item) => {
-    return {
-      color: judgeLabel(parseNode.label),
+  console.log(d, "上传后的数据", data);
+  data.nodes = [
+    ...data.nodes,
+    ...d.node.map((item) => {
+      let parseNode = JSON.parse(item);
+      return {
+        color: "rgba(233,120,231,1)",
+        ...parseNode,
+        collapsed: true,
+      };
+    }),
+  ];
+  data.links = [
+    ...d.relation.map((item) => ({
+      linkColor: "red",
+      linkWidth: 30,
+      linkOpacity: 1,
       ...JSON.parse(item),
-      collapsed: true,
-    };
-  });
-  data.value.links = d.relation.map((item) => JSON.parse(item));
-  myGraph.graphData(data.value);
+    })),
+    ...data.links,
+  ];
+  console.log(data);
+  myGraph.graphData(data);
 };
 // 图数据事件
 let myGraph = ForceGraph3D();
@@ -184,7 +197,7 @@ onMounted(async () => {
   await getData();
   const graphElement = document.getElementById("graph");
   myGraph(graphElement)
-    .graphData(data.value)
+    .graphData(data)
     // 右击节点事件
     .onNodeRightClick(function (node, event) {
       currentNode.value = node;
@@ -196,7 +209,7 @@ onMounted(async () => {
     .onNodeClick(function (node) {
       //  左击鼠标
       if (selectedNode.value.some((item) => item.id == node.id)) {
-        data.value.nodes.forEach((item) => {
+        data.nodes.forEach((item) => {
           if (item.id == node.id) {
             item.color = "#fff";
           }
@@ -205,14 +218,14 @@ onMounted(async () => {
           (item) => item.id != node.id
         );
       } else {
-        data.value.nodes.forEach((item) => {
+        data.nodes.forEach((item) => {
           if (item.id == node.id) {
             item.color = "red";
           }
         });
         selectedNode.value.push(node);
       }
-      myGraph.graphData(data.value);
+      myGraph.graphData(data);
     })
     .nodeThreeObjectExtend(true)
     .nodeThreeObject((node) => {

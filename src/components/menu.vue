@@ -21,7 +21,7 @@ const props = defineProps({
   },
 });
 const uploadRef = ref(null);
-const emit = defineEmits(["nextNode", "getNodeDetail"]);
+const emit = defineEmits(["nextNode", "getNodeDetail", "resetData"]);
 // 获取下一个节点
 const getNext = async () => {
   const res = await getNextNode(props.node.id);
@@ -33,7 +33,6 @@ const importData = () => {
 };
 const uploadFile = (data) => {
   emit("resetData", data);
-  uploadRef.value.open = false;
 };
 // 获取节点详情
 const getNodeDetail = () => {
