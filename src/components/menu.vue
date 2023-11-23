@@ -1,6 +1,6 @@
 <template>
-  <div class="menu-wrap" :style="{ height: props.node?.id ? '100px' : '50px' }">
-    <template v-if="props.node?.id">
+  <div class="menu-wrap" :style="{ height: isHiddenMenu ? '100px' : '50px' }">
+    <template v-if="isHiddenMenu">
       <div class="button" @click="getNext">下一级节点</div>
       <div class="solid"></div>
       <div class="button" @click="getNodeDetail">节点详情</div>
@@ -12,7 +12,7 @@
 
 <script setup>
 import { getNextNode } from "../api/graph.js";
-import { defineProps, defineEmits, ref } from "vue";
+import { defineProps, defineEmits, ref, computed } from "vue";
 import upload from "./upload.vue";
 
 const props = defineProps({
@@ -21,7 +21,9 @@ const props = defineProps({
     required: true,
   },
 });
-
+const isHiddenMenu = computed(() => {
+  return Object.keys(props.node).length > 0;
+});
 const uploadRef = ref(null);
 const emit = defineEmits(["nextNode", "getNodeDetail", "resetData"]);
 // 获取下一个节点
