@@ -91,7 +91,7 @@ const getData = async () => {
         color: judgeLabel(parseNode.label),
         ...parseNode,
         collapsed: false,
-        nodeLabel: "2232323",
+        nodeRelSize: 8,
       };
     });
     data.links = [];
@@ -167,6 +167,7 @@ const nextNode = (nextData) => {
 };
 // 导入后重置
 const resetData = (d) => {
+  showMenu.value = false;
   console.log(d, "上传后的数据", data);
   data.nodes = [
     ...data.nodes,
@@ -188,8 +189,23 @@ const resetData = (d) => {
     })),
     ...data.links,
   ];
-  console.log(data);
   myGraph.graphData(data);
+  // const n = data.nodes.filter((item) => item.id == JSON.parse(d.node[0]).id)[0];
+  // force(n);
+};
+// 聚焦导入节点
+const force = (node) => {
+  const distance = 200;
+  const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+  const newPos =
+    node.x || node.y || node.z
+      ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+      : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+  myGraph.cameraPosition(
+    newPos, // new position
+    node, // lookAt ({ x, y, z })
+    3000 // ms transition duration
+  );
 };
 // 图数据事件
 let myGraph = ForceGraph3D();
@@ -200,13 +216,17 @@ onMounted(async () => {
     .graphData(data)
     // 右击节点事件
     .onNodeRightClick(function (node, event) {
-      currentNode.value = node;
+      if (node.color == "red") {
+        currentNode.value = node;
+      }
       menuPosition.left = event.offsetX + "px";
       menuPosition.top = event.offsetY + "px";
       showMenu.value = true;
     })
     // 左击节点事件
     .onNodeClick(function (node) {
+      console.log(node);
+
       //  左击鼠标
       if (selectedNode.value.some((item) => item.id == node.id)) {
         data.nodes.forEach((item) => {
@@ -239,10 +259,18 @@ onMounted(async () => {
     .onBackgroundClick(function () {
       showToolTip.value = false;
       showMenu.value = false;
+    })
+    .onBackgroundRightClick(function (e) {
+      currentNode.value = {};
+      menuPosition.left = e.offsetX + "px";
+      menuPosition.top = e.offsetY + "px";
+      showMenu.value = true;
+    })
+    .enablePointerInteraction(true)
+    .enableNodeDrag(false)
+    .onNodeDrag(() => {
+      console.log("拖动了");
     });
-  // .onBackgroundRightClick(function () {
-  //   showMenu.value = true;
-  // })
 });
 // 展示节点详情
 const getNodeDetail = () => {
